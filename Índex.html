@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Welton do Coco - Gestão Profissional</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --primary: #16a34a;
+            --primary-hover: #15803d;
+            --accent: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border: #334155;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding: 12px; max-width: 650px; margin: 0 auto; padding-bottom: 60px; }
+        
+        header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--primary); }
+        h1 { font-size: 1.4rem; color: var(--accent); }
+        p.subtitle { font-size: 0.85rem; color: #94a3b8; }
+        
+        /* MENU DE ABAS */
+        .nav-tabs { display: flex; gap: 4px; margin-bottom: 15px; background: #020617; padding: 4px; border-radius: 10px; border: 1px solid var(--border); overflow-x: auto; }
+        .nav-tabs button { flex: 1; padding: 10px 6px; background: transparent; border: none; color: var(--text-color); border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; white-space: nowrap; }
+        .nav-tabs button.active { background: var(--primary); color: #fff; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 15px; }
+        h2 { font-size: 1.1rem; margin-bottom: 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        
+        label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #cbd5e1; font-weight: 500; }
+        input, select { width: 100%; padding: 11px; margin-bottom: 10px; background: #0f172a; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 0.95rem; }
+        
+        button.btn { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        button.btn:active { background: var(--primary-hover); }
+        button.btn-danger { background: var(--danger); }
+        button.btn-warning { background: var(--warning); color: #000; }
+        button.btn-sm { padding: 6px 10px; font-size: 0.8rem; width: auto; display: inline-block; margin: 3px 2px; }
+
+        .list-item { background: #0f172a; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--primary); font-size: 0.9rem; }
+        .flex-row { display: flex; gap: 8px; }
+        .flex-row > * { flex: 1; }
+        
+        .carrinho-tabela { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 0.9rem; }
+        .carrinho-tabela th, .carrinho-tabela td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border); }
+        .carrinho-tabela th { color: #94a3b8; font-size: 0.8rem; }
+
+        .total-box { font-size: 1.2rem; font-weight: bold; text-align: right; margin: 10px 0; color: var(--accent); }
+        .caixa-resumo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .caixa-card { background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
+        .caixa-card span { font-size: 0.75rem; color: #94a3b8; display: block; }
+        .caixa-card strong { font-size: 1.1rem; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌴 Welton do Coco</h1>
+        <p class="subtitle">Gestão Comercial Profissional</p>
+    </header>
+
+    <!-- MENU -->
+    <nav class="nav-tabs">
+        <button id="btn-venda" class="active" onclick="mudarAba('venda')">🛒 Venda</button>
+        <button id="btn-fiados" onclick="mudarAba('fiados')">📒 Fiados</button>
+        <button id="btn-caixa" onclick="mudarAba('caixa')">📊 Caixa</button>
+        <button id="btn-clientes" onclick="mudarAba('clientes')">👤 Clientes</button>
+        <button id="btn-produtos" onclick="mudarAba('produtos')">🥥 Produtos</button>
+    </nav>
+
+    <!-- ABA 1: VENDA COM CARRINHO -->
+    <div id="aba-venda" class="tab-content active">
+        <div class="card">
+            <h2>Registrar Venda</h2>
+            
+            <label>Cliente:</label>
+            <select id="venda-cliente" onchange="verificarClienteNovo()">
+                <option value="">-- Dinheiro / À Vista (Sem cadastro) --</option>
+                <option value="NOVO">+ Digitar novo cliente agora...</option>
+            </select>
+
+            <div id="bloco-novo-cli" style="display:none; background:#0f172a; padding:10px; border-radius:6px; margin-bottom:10px; border:1px dashed var(--accent);">
+                <label>Nome:</label>
+                <input type="text" id="novo-nome" placeholder="Ex: Carlos da Praia">
+                <label>WhatsApp (opcional, com DDD):</label>
+                <input type="tel" id="novo-fone" placeholder="Ex: 71999999999">
+            </div>
+
+            <div class="flex-row">
+                <div>
+                    <label>Produto:</label>
+                    <select id="venda-produto" onchange="atualizarPrecoSugerido()"></select>
+                </div>
+                <div>
+                    <label>Qtd:</label>
+                    <input type="number" id="venda-qtd" value="1" min="1" style="width: 70px;">
+                </div>
+            </div>
+            
+            <div class="flex-row">
+                <div>
+                    <label>Preço Unit. (R$):</label>
+                    <input type="number" id="venda-preco" step="0.01">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button type="button" class="btn" style="height: 45px;" onclick="adicionarAoCarrinho()">➕ Adicionar</button>
+                </div>
+            </div>
+
+            <h3 style="font-size: 0.95rem; margin: 15px 0 5px; color:#94a3b8;">Itens da Venda Atual:</h3>
+            <table class="carrinho-tabela">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qtd</th>
+                        <th>Subt.</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="carrinho-lista">
+                    <tr><td colspan="4" style="text-align:center; color:#64748b;">Carrinho vazio</td></tr>
+                </tbody>
+            </table>
+
+            <div class="total-box" id="carrinho-total">Total: R$ 0,00</div>
+
+            <label>Forma de Pagamento:</label>
+            <select id="venda-pagamento">
+                <option value="pago">✅ Pago (À Vista / PIX / Dinheiro)</option>
+                <option value="pendente">📒 Fiado (Anotar na Caderneta)</option>
+            </select>
+
+            <button type="button" class="btn" style="background: var(--primary); margin-top: 5px;" onclick="finalizarVenda()">💾 Finalizar e Salvar Venda</button>
+        </div>
+    </div>
+
+    <!-- ABA 2: FIADOS E ABATIMENTOS -->
+    <div id="aba-fiados" class="tab-content">
+        <div class="card">
+            <h2>Caderneta de Fiados</h2>
+            <div id="lista-fiados"></div>
+        </div>
+    </div>
+
+    <!-- ABA 3: CAIXA E RELATÓRIO -->
+    <div id="aba-caixa" class="tab-content">
+        <div class="card">
+            <h2>Resumo Financeiro</h2>
+            <div class="caixa-resumo">
+                <div class="caixa-card">
+                    <span>Vendas no Dinheiro/PIX</span>
+                    <strong id="caixa-recebido">R$ 0,00</strong>
+                </div>
+                <div class="caixa-card">
+                    <span>Total Fiado (Aberto)</span>
+                    <strong id="caixa-fiado" style="color: var(--warning);">R$ 0,00</strong>
+                </div>
+            </div>
+            <h3 style="font-size: 1rem; margin-bottom: 8px; color:#cbd5e1;">Histórico de Vendas Recentes:</h3>
+            <div id="lista-historico-vendas"></div>
+        </div>
+    </div>
+
+    <!-- ABA 4: CLIENTES -->
+    <div id="aba-clientes" class="tab-content">
+        <div class="card">
+            <h2>Cadastrar Cliente</h2>
+            <label>Nome:</label>
+            <input type="text" id="cli-nome" placeholder="Ex: João da Silva">
+            <label>WhatsApp (com DDD):</label>
+            <input type="tel" id="cli-fone" placeholder="Ex: 71999999999">
+            <button type="button" class="btn" onclick="salvarCliente()">💾 Salvar Cliente</button>
+        </div>
+        <div class="card">
+            <h2>Clientes Salvos</h2>
+            <div id="lista-clientes-cadastrados"></div>
+        </div>
+    </div>
+
+    <!-- ABA 5: PRODUTOS -->
+    <div id="aba-produtos" class="tab-content">
+        <div class="card">
+            <h2>Cadastrar Produto</h2>
+            <label>Nome do Produto:</label>
+            <input type="text" id="prod-nome" placeholder="Ex: Coco Verde">
+            <label>Preço Padrão (R$):</label>
+            <input type="number" id="prod-preco" step="0.01" placeholder="Ex: 5.00">
+            <button type="button" class="btn" onclick="salvarProduto()">💾 Salvar Produto</button>
+        </div>
+        <div class="card">
+            <h2>Produtos Ativos</h2>
+            <div id="lista-produtos-cadastrados"></div>
+        </div>
+    </div>
+
+    <script>
+        // BANCO DE DADOS LOCAL
+        let db = JSON.parse(localStorage.getItem('welton_coco_pro_db')) || {
+            clientes: [],
+            produtos: [
+                { id: 1, nome: 'Coco Verde', preco: 5.00 },
+                { id: 2, nome: 'Água de Coco (Garrafa 500ml)', preco: 6.00 },
+                { id: 3, nome: 'Coco Seco', preco: 7.00 }
+            ],
+            vendas: []
+        };
+
+        let carrinho = [];
+
+        function salvarDB() {
+            localStorage.setItem('welton_coco_pro_db', JSON.stringify(db));
+        }
+
+        function mudarAba(aba) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tabs button').forEach(el => el.classList.remove('active'));
+            document.getElementById('aba-' + aba).classList.add('active');
+            document.getElementById('btn-' + aba).classList.add('active');
+            atualizarTelas();
+        }
+
+        // --- PRODUTOS ---
+        function salvarProduto() {
+            let nome = document.getElementById('prod-nome').value.trim();
+            let preco = parseFloat(document.getElementById('prod-preco').value.toString().replace(',', '.'));
+            if (!nome || isNaN(preco) || preco <= 0) { alert('Preencha o nome e o preço correto!'); return; }
+            db.produtos.push({ id: Date.now(), nome, preco });
+            salvarDB();
+            document.getElementById('prod-nome').value = '';
+            document.getElementById('prod-preco').value = '';
+            atualizarTelas();
+            alert('✅ Produto cadastrado!');
+        }
+
+        function excluirProduto(id) {
+            if (confirm('Excluir produto?')) {
+                db.produtos = db.produtos.filter(p => p.id !== id);
+                salvarDB();
+                atualizarTelas();
+            }
+        }
+
+        // --- CLIENTES ---
+        function salvarCliente() {
+            let nome = document.getElementById('cli-nome').value.trim();
+            let fone = document.getElementById('cli-fone').value.trim().replace(/\D/g, '');
+            if (!nome) { alert('Digite o nome do cliente!'); return; }
+            db.clientes.push({ id: Date.now(), nome, fone });
+            salvarDB();
+            document.getElementById('cli-nome').value = '';
+            document.getElementById('cli-fone').value = '';
+            atualizarTelas();
+            alert('✅ Cliente cadastrado!');
+        }
+
+        function excluirCliente(id) {
+            if (confirm('Excluir cliente?')) {
+                db.clientes = db.clientes.filter(c => c.id !== id);
+                salvarDB();
+                atualizarTelas();
+            }
+        }
+
+        // --- CARRINHO DE VENDAS ---
+        function verificarClienteNovo() {
+            let val = document.getElementById('venda-cliente').value;
+            document.getElementById('bloco-novo-cli').style.display = (val === 'NOVO') ? 'block' : 'none';
+        }
+
+        function atualizarPrecoSugerido() {
+            let prodId = document.getElementById('venda-produto').value;
+            let p = db.produtos.find(item => item.id == prodId);
+            if (p) document.getElementById('venda-preco').value = p.preco.toFixed(2);
+        }
+
+        function adicionarAoCarrinho() {
+            let prodId = document.getElementById('venda-produto').value;
+            let qtd = parseInt(document.getElementById('venda-qtd').value);
+            let preco = parseFloat(document.getElementById('venda-preco').value.toString().replace(',', '.'));
+            
+            let p = db.produtos.find(item => item.id == prodId);
+            if (!p || isNaN(qtd) || qtd <= 0 || isNaN(preco)) {
+                alert('Selecione um produto e informe quantidade e preço válidos.');
+                return;
+            }
+
+            carrinho.push({ id: Date.now(), nome: p.nome, qtd: qtd, preco: preco, subtotal: qtd * preco });
+            document.getElementById('venda-qtd').value = 1;
+            renderizarCarrinho();
+        }
+
+        function removerDoCarrinho(id) {
+            carrinho = carrinho.filter(item => item.id !== id);
+            renderizarCarrinho();
+        }
+
+        function renderizarCarrinho() {
+            let lista = document.getElementById('carrinho-lista');
+            let totalEl = document.getElementById('carrinho-total');
+            if (carrinho.length === 0) {
+                lista.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">Carrinho vazio</td></tr>';
+                totalEl.innerText = 'Total: R$ 0,00';
+                return;
+            }
+            let html = '';
+            let totalGeral = 0;
+            carrinho.forEach(item => {
+                totalGeral += item.subtotal;
+                html += `<tr>
+                    <td>${item.nome}</td>
+                    <td>${item.qtd}x R$ ${item.preco.toFixed(2).replace('.', ',')}</td>
+                    <td><b>R$ ${item.subtotal.toFixed(2).replace('.', ',')}</b></td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="removerDoCarrinho(${item.id})">X</button></td>
+                </tr>`;
+            });
+            lista.innerHTML = html;
+            totalEl.innerText = 'Total: R$ ' + totalGeral.toFixed(2).replace('.', ',');
+        }
+
+        function finalizarVenda() {
+            if (carrinho.length === 0) { alert('Adicione itens ao carrinho antes de finalizar!'); return; }
+            
+            let clienteSel = document.getElementById('venda-cliente').value;
+            let status = document.getElementById('venda-pagamento').value;
+            
+            let clienteObj = { id: 0, nome: 'Cliente Balcão', fone: '' };
+
+            if (clienteSel === 'NOVO') {
+                let nomeNovo = document.getElementById('novo-nome').value.trim();
+                let foneNovo = document.getElementById('novo-fone').value.trim().replace(/\D/g, '');
+                if (!nomeNovo) { alert('Digite o nome do cliente!'); return; }
+                clienteObj = { id: Date.now(), nome: nomeNovo, fone: foneNovo };
+                db.clientes.push(clienteObj);
+                document.getElementById('novo-nome').value = '';
+                document.getElementById('novo-fone').value = '';
+                document.getElementById('bloco-novo-cli').style.display = 'none';
+            } else if (clienteSel !== '') {
+                let achado = db.clientes.find(c => c.id == clienteSel);
+                if (achado) clienteObj = achado;
+            } else if (status === 'pendente') {
+                alert('Para vender FIADO, selecione um cliente ou digite o nome!');
+                return;
+            }
+
+            let totalVenda = carrinho.reduce((acc, i) => acc + i.subtotal, 0);
+
+            let novaVenda = {
+                id: Date.now(),
+                clienteId: clienteObj.id,
+                clienteNome: clienteObj.nome,
+                clienteFone: clienteObj.fone,
+                itens: [...carrinho],
+                total: totalVenda,
+                status: status,
+                data: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+            };
+
+            db.vendas.push(novaVenda);
+            salvarDB();
+
+            if (status === 'pago') {
+                if (confirm('✅ Venda registrada! Deseja compartilhar o comprovante no WhatsApp?')) {
+                    enviarComprovanteZap(novaVenda);
+                }
+            } else {
+                alert('✅ Venda em fiado anotada na caderneta!');
+            }
+
+            carrinho = [];
+            renderizarCarrinho();
+            atualizarTelas();
+        }
+
+        // --- WHATSAPP & PAGAMENTOS PARCIAIS ---
+        function enviarComprovanteZap(v) {
+            let itensStr = v.itens.map(i => `• ${i.qtd}x ${i.nome} (R$ ${i.subtotal.toFixed(2).replace('.', ',')})`).join('\n');
+            let msg = `🥥 *Welton do Coco* - Comprovante\n📅 Data: ${v.data}\n👤 Cliente: ${v.clienteNome}\n\n${itensStr}\n\n💰 Total: *R$ ${v.total.toFixed(2).replace('.', ',')}*\n✅ Status: *PAGO*\n\nObrigado pela preferência! 🌴`;
+            
+            let url = v.clienteFone ? `https://wa.me/55${v.clienteFone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+            window.location.href = url;
+        }
+
+        function cobrarFiado(clienteId) {
+            let c = db.clientes.find(x => x.id == clienteId);
+            let abertos = db.vendas.filter(v => v.clienteId == clienteId && v.status === 'pendente');
+            let totalDevido = abertos.reduce((acc, v) => acc + v.total, 0);
+            let nomeCliente = c ? c.nome : 'Cliente';
+            let foneCliente = c ? c.fone : '';
+            
+            let resumo = abertos.map(v => `• ${v.data}: R$ ${v.total.toFixed(2).replace('.', ',')}`).join('\n');
+            let msg = `🥥 Olá *${nomeCliente}*, aqui é do *Welton do Coco*.\n\nPassando para lembrar do seu saldo em aberto na caderneta:\n${resumo}\n\nTotal devido: *R$ ${totalDevido.toFixed(2).replace('.', ',')}*\nPode acertar via PIX ou quando nos encontrarmos. Obrigado! 🌴`;
+            
+            let url = foneCliente ? `https://wa.me/55${foneCliente}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+            window.location.href = url;
+        }
+
+        // ABATIMENTO PARCIAL OU TOTAL CORRETO
+        function registrarPagamentoFiado(clienteId) {
+            let abertos = db.vendas.filter(v => v.clienteId == clienteId && v.status === 'pendente');
+            let totalDevido = abertos.reduce((acc, v) => acc + v.total, 0);
+
+            let valorStr = prompt(`Total devido: R$ ${totalDevido.toFixed(2).replace('.', ',')}\n\nDigite quanto o cliente está PAGANDO AGORA (parcial ou total):`);
+            if (!valorStr) return;
+            let valorPago = parseFloat(valorStr.replace(',', '.'));
+
+            if (isNaN(valorPago) || valorPago <= 0) { alert('Valor inválido!'); return; }
+
+            if (valorPago >= totalDevido) {
+                abertos.forEach(v => v.status = 'pago');
+                alert('✅ Dívida totalmente quitada!');
+            } else {
+                let resto = valorPago;
+                abertos.forEach(v => {
+                    if (resto <= 0) return;
+                    if (v.total <= resto) {
+                        resto -= v.total;
+                        v.status = 'pago';
+                    } else {
+                        v.total -= resto;
+                        resto = 0;
+                    }
+                });
+                alert(`✅ Pagamento parcial de R$ ${valorPago.toFixed(2).replace('.', ',')} abatido com sucesso!`);
+            }
+            salvarDB();
+            atualizarTelas();
+        }
+
+        // --- ATUALIZAR INTERFACE ---
+        function atualizarTelas() {
+            // Select Cliente Venda
+            let selCli = document.getElementById('venda-cliente');
+            let valAnt = selCli.value;
+            selCli.innerHTML = '<option value="">-- Dinheiro / À Vista (Sem cadastro) --</option><option value="NOVO">+ Digitar novo cliente agora...</option>';
+            db.clientes.forEach(c => selCli.innerHTML += `<option value="${c.id}">${c.nome}</option>`);
+            if (valAnt) selCli.value = valAnt;
+
+            // Select Produto Venda
+            let selProd = document.getElementById('venda-produto');
+            selProd.innerHTML = '';
+            db.produtos.forEach(p => selProd.innerHTML += `<option value="${p.id}">${p.nome} (R$ ${p.preco.toFixed(2).replace('.', ',')})</option>`);
+            atualizarPrecoSugerido();
+
+            // Listas de Gestão (Produtos e Clientes)
+            document.getElementById('lista-produtos-cadastrados').innerHTML = db.produtos.map(p => `
+                <div class="list-item">
+                    <div><b>${p.nome}</b><br><span style="color:var(--accent);">R$ ${p.preco.toFixed(2).replace('.', ',')}</span></div>
+                    <button class="btn btn-danger btn-sm" onclick="excluirProduto(${p.id})">Excluir</button>
+                </div>
+            `).join('') || '<p style="color:#64748b;">Nenhum produto cadastrado.</p>';
+
+            document.getElementById('lista-clientes-cadastrados').innerHTML = db.clientes.map(c => `
+                <div class="list-item">
+                    <div><b>${c.nome}</b><br><small style="color:#94a3b8;">Zap: ${c.fone || 'Não informado'}</small></div>
+                    <button class="btn btn-danger btn-sm" onclick="excluirCliente(${c.id})">Excluir</button>
+                </div>
+            `).join('') || '<p style="color:#64748b;">Nenhum cliente cadastrado.</p>';
+
+            // Caderneta de Fiados Agrupada por Cliente
+            let pendentes = db.vendas.filter(v => v.status === 'pendente');
+            let devendo = {};
+            pendentes.forEach(v => {
+                if (!devendo[v.clienteId]) devendo[v.clienteId] = { nome: v.clienteNome, fone: v.clienteFone, total: 0, lista: [] };
+                devendo[v.clienteId].total += v.total;
+                devendo[v.clienteId].lista.push(v);
+            });
+
+            let htmlFiados = '';
+            for (let id in devendo) {
+                let d = devendo[id];
+                htmlFiados += `
+                    <div class="card" style="border-left: 4px solid var(--warning); background:#0f172a;">
+                        <h3>👤 ${d.nome}</h3>
+                        <p style="font-size: 0.8rem; color:#94a3b8; margin-bottom: 6px;">WhatsApp: ${d.fone || 'Não informado'}</p>
+                        <div style="font-size: 0.85rem; margin-bottom: 8px;">
+                            ${d.lista.map(i => `• ${i.data}: ${i.itens.map(it=>it.qtd+'x '+it.nome).join(', ')} — <b>R$ ${i.total.toFixed(2).replace('.', ',')}</b>`).join('<br>')}
+                        </div>
+                        <div class="total-box" style="font-size: 1rem; margin-bottom: 8px;">Total Devido: R$ ${d.total.toFixed(2).replace('.', ',')}</div>
+                        <button class="btn btn-warning btn-sm" onclick="cobrarFiado(${id})">💬 Compartilhar Cobrança no WhatsApp</button>
+                        <button class="btn btn-sm" onclick="registrarPagamentoFiado(${id})">💵 Registrar Pagamento</button>
+                    </div>
+                `;
+            }
+            document.getElementById('lista-fiados').innerHTML = htmlFiados || '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhum fiado em aberto! 🎉</p>';
+
+            // Caixa e Relatórios
+            let totalRecebido = db.vendas.filter(v => v.status === 'pago').reduce((acc, v) => acc + v.total, 0);
+            let totalFiadoAberto = pendentes.reduce((acc, v) => acc + v.total, 0);
+            document.getElementById('caixa-recebido').innerText = 'R$ ' + totalRecebido.toFixed(2).replace('.', ',');
+            document.getElementById('caixa-fiado').innerText = 'R$ ' + totalFiadoAberto.toFixed(2).replace('.', ',');
+
+            document.getElementById('lista-historico-vendas').innerHTML = db.vendas.slice(-15).reverse().map(v => `
+                <div class="list-item" style="border-left-color: ${v.status === 'pago' ? 'var(--primary)' : 'var(--warning)'}">
+                    <div>
+                        <b>${v.clienteNome}</b> (${v.status.toUpperCase()})<br>
+                        <small style="color:#94a3b8;">${v.data} — ${v.itens.map(i=>i.qtd+'x '+i.nome).join(', ')}</small>
+                    </div>
+                    <div style="text-align:right;">
+                        <strong style="color:var(--accent);">R$ ${v.total.toFixed(2).replace('.', ',')}</strong>
+                    </div>
+                </div>
+            `).join('') || '<p style="color:#64748b;">Nenhuma venda registrada ainda.</p>';
+        }
+
+        // Inicializar
+        renderizarCarrinho();
+        atualizarTelas();
+    </script>
+</body>
+</html>
